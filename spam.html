@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accelerating Auto Spammer 💖</title>
+    <style>
+        :root {
+            --bg-color: #ffeef2; /* Matching Pastel Pink */
+            --card-color: #ffffff;
+            --text-color: #333;
+            --accent-pink: #ff6f91; /* Main cute color */
+            --accent-hover: #e05273;
+            --success-green: #79d7bb;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 15px;
+            overflow-x: hidden; /* Prevent horizontal scrolling entirely */
+            position: relative;
+        }
+
+        /* --- CONTROL PANEL --- */
+        .control-panel {
+            background: var(--card-color);
+            max-width: 450px;
+            width: 100%;
+            padding: 25px;
+            border-radius: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            border: 4px solid #ffe3e8;
+            z-index: 10; 
+            margin-top: 20px;
+        }
+
+        h1 {
+            font-size: clamp(1.3rem, 5vw, 1.6rem);
+            color: var(--accent-pink);
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        p.subtitle {
+            font-size: clamp(0.85rem, 3.5vw, 0.95rem);
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn {
+            border: none;
+            padding: 12px 20px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+            outline: none;
+        }
+
+        .btn-spam {
+            background: var(--accent-pink);
+            color: white;
+            box-shadow: 0 5px 15px rgba(255, 111, 145, 0.2);
+            flex: 2;
+        }
+
+        .btn-spam.active {
+            background: var(--success-green);
+            box-shadow: 0 5px 15px rgba(121, 215, 187, 0.3);
+        }
+
+        .btn-clear {
+            background: #666;
+            color: white;
+            flex: 1;
+        }
+
+        /* --- FLOATING SPAM CARDS --- */
+        .spam-card {
+            position: absolute;
+            background: var(--card-color);
+            padding: 12px 16px;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid var(--accent-pink);
+            font-weight: 600;
+            font-size: clamp(0.85rem, 3vw, 0.95rem);
+            color: #444;
+            pointer-events: none; 
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            
+            /* CRITICAL RESPONSIVE BREAKPOINTS */
+            max-width: 85vw; /* Stops cards from stretching wider than mobile screen size */
+            white-space: normal; /* Wraps long text neatly into next line if needed on tiny screens */
+            word-wrap: break-word;
+            
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.2) forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.6); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CONTROL HUB -->
+    <div class="control-panel">
+        <h1>💖 Chaos Compliment Spammer</h1>
+        <p class="subtitle">Warning: The longer it runs, the faster it updates! Click to trigger the chaos loop.</p>
+        <div class="btn-group">
+            <button class="btn btn-spam" id="spam-btn" onclick="toggleAutoSpam()">Start Auto Spam! 🚀</button>
+            <button class="btn btn-clear" onclick="clearScreen()">Clear 🧹</button>
+        </div>
+    </div>
+
+    <!-- CARDS CONTAINER -->
+    <div id="spam-area"></div>
+
+    <script>
+        const compliments = [
+            "You are so cute! 🥺",
+            "Stop overthinking everything! 🧠",
+            "You have the prettiest smile! ✨",
+            "Go study for your exams! 📚",
+            "I'm so proud of you! ❤️",
+            "You are my absolute favorite person. 🌸",
+            "Drink some water right now! 💧",
+            "You look beautiful today! 👸",
+            "Everything is going to be fine. 🍀",
+            "Sending you a giant virtual hug! 🤗",
+            "You are incredibly smart! 🎓",
+            "Your angry face is also cute. 😡",
+            "Don't stress too much! 🧘‍♀️",
+            "You are my queen! 👑",
+            "I love you infinitely! 🔒❤️",
+            "You are doing amazing! 🌟"
+        ];
+
+        let timeoutRef = null;
+        let isSpamming = false;
+        
+        let initialDelay = 600; 
+        let currentDelay = initialDelay;
+        const minDelay = 60;    
+        const speedStep = 30;   
+
+        function toggleAutoSpam() {
+            const btn = document.getElementById("spam-btn");
+
+            if (!isSpamming) {
+                isSpamming = true;
+                currentDelay = initialDelay; 
+                btn.innerText = "Stop Spamming! 🛑";
+                btn.classList.add("active");
+                runSpamLoop();
+            } else {
+                isSpamming = false;
+                if (timeoutRef) clearTimeout(timeoutRef);
+                btn.innerText = "Start Auto Spam! 🚀";
+                btn.classList.remove("active");
+            }
+        }
+
+        function runSpamLoop() {
+            if (!isSpamming) return;
+            createSpamCard();
+            if (currentDelay > minDelay) {
+                currentDelay -= speedStep;
+            }
+            timeoutRef = setTimeout(runSpamLoop, currentDelay);
+        }
+
+        function createSpamCard() {
+            const spamArea = document.getElementById("spam-area");
+            const card = document.createElement("div");
+            card.className = "spam-card";
+            
+            const randomText = compliments[Math.floor(Math.random() * compliments.length)];
+            card.innerHTML = randomText;
+
+            // --- NEW: Randomize font size for variety ---
+            const randomSize = 0.8 + Math.random() * 0.6; // Creates a size between 0.8rem and 1.4rem
+            card.style.fontSize = `${randomSize}rem`;
+
+            // --- FIXED: INJECT INTO DOM FIRST TO MEASURE TRUE RESPONSIVE ELEMENT DIMENSIONS ---
+            spamArea.appendChild(card);
+
+            // Fetch pixel widths dynamically after browser applied flex or text wrap properties
+            const cardActualWidth = card.offsetWidth;
+            const cardActualHeight = card.offsetHeight;
+
+            // Calculate exact boundaries safely inside the screen padding viewports
+            const padding = 10;
+            const maxX = window.innerWidth - cardActualWidth - padding;
+            const maxY = window.innerHeight - cardActualHeight - padding;
+
+            // Enforce clean coordinates bounds checks
+            const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+            // Keeps items nicely below the top console layout
+            const randomY = Math.max(160, Math.floor(Math.random() * (maxY - 160)) + 160); 
+
+            // Apply custom absolute properties natively
+            card.style.left = `${randomX}px`;
+            card.style.top = `${randomY}px`;
+
+            const randomRotate = Math.floor(Math.random() * 16) - 8; // Slight clean rotation (-8deg to 8deg)
+            card.style.transform = `rotate(${randomRotate}deg)`;
+        }
+
+        function clearScreen() {
+            if (isSpamming) {
+                toggleAutoSpam();
+            }
+            document.getElementById("spam-area").innerHTML = "";
+        }
+    </script>
+</body>
+</html>
