@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Countdown & Energy Booster 🎓✨</title>
+    <style>
+        :root {
+            --bg-color: #ffeef2; /* Matching Pastel Pink */
+            --card-color: #ffffff;
+            --text-color: #333;
+            --accent-pink: #ff6f91; /* Main cute color */
+            --accent-hover: #e05273;
+            --purple-light: #fff5f7;
+            --font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .main-container {
+            background: var(--card-color);
+            max-width: 450px;
+            width: 100%;
+            padding: 30px 20px;
+            border-radius: 25px;
+            box-shadow: 0 10px 25px rgba(255, 111, 145, 0.12);
+            text-align: center;
+            border: 4px solid #ffe3e8;
+        }
+
+        h1 {
+            font-size: clamp(1.3rem, 5vw, 1.6rem);
+            color: var(--accent-pink);
+            margin-bottom: 5px;
+            font-weight: 800;
+        }
+
+        p.subtitle {
+            font-size: clamp(0.85rem, 3.5vw, 0.95rem);
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        /* --- COUNTDOWN BLOCK DISPLAY --- */
+        .countdown-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: var(--purple-light);
+            padding: 15px;
+            border-radius: 20px;
+            border: 2px dashed #ffe3e8;
+        }
+
+        .time-block {
+            flex: 1;
+            background: white;
+            padding: 10px 5px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+
+        .time-number {
+            font-size: clamp(1.4rem, 6vw, 1.8rem);
+            font-weight: 800;
+            color: var(--accent-pink);
+            display: block;
+        }
+
+        .time-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #888;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        /* --- REASSURANCE ZONE --- */
+        .energy-btn {
+            background: var(--accent-pink);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 111, 145, 0.25);
+            transition: transform 0.2s, background 0.2s;
+            width: 90%;
+            outline: none;
+            margin-bottom: 10px;
+        }
+
+        .energy-btn:active {
+            transform: scale(0.97);
+        }
+
+        .pack-display {
+            margin-top: 20px;
+            background: #fff5f7;
+            border-radius: 16px;
+            padding: 20px;
+            border-left: 5px solid var(--accent-pink);
+            text-align: left;
+            display: none; /* Revealed on click */
+            animation: slideDown 0.4s ease-out forwards;
+        }
+
+        @keyframes slideDown {
+            0% { opacity: 0; transform: translateY(-10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .pack-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--accent-pink);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pack-body {
+            font-size: 0.95rem;
+            color: #444;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <h1>🎓 Study Countdown Hub</h1>
+        <p class="subtitle">Real-time tracking until absolute freedom from exams!</p>
+
+        <!-- COUNTDOWN SYSTEM DISPLAY -->
+        <div class="countdown-container">
+            <div class="time-block">
+                <span class="time-number" id="days">00</span>
+                <span class="time-label">Days</span>
+            </div>
+            <div class="time-block">
+                <span class="time-number" id="hours">00</span>
+                <span class="time-label">Hours</span>
+            </div>
+            <div class="time-block">
+                <span class="time-number" id="mins">00</span>
+                <span class="time-label">Mins</span>
+            </div>
+            <div class="time-block">
+                <span class="time-number" id="secs">00</span>
+                <span class="time-label">Secs</span>
+            </div>
+        </div>
+
+        <!-- ENERGIZER REASSURANCE ACTIONS -->
+        <button class="energy-btn" onclick="claimEnergyPack()">Claim Daily Energy Pack 🔌✨</button>
+        
+        <div class="pack-display" id="energy-pack">
+            <div class="pack-title" id="pack-heading">💡 Loading reminder...</div>
+            <p class="pack-body" id="pack-message">Your energy message will display instantly.</p>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION: Set the precise target date for when exams finish ---
+        // Format: "Month Day, Year HH:MM:SS"
+        const targetExamEnd = new Date("Aug 28, 2026 12:00:00").getTime();
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = targetExamEnd - now;
+
+            if (distance < 0) {
+                document.getElementById("days").innerText = "00";
+                document.getElementById("hours").innerText = "00";
+                document.getElementById("mins").innerText = "00";
+                document.getElementById("secs").innerText = "00";
+                document.querySelector(".subtitle").innerText = "🎉 FREEDOM! Exams are officially over! Time to celebrate!";
+                return;
+            }
+
+            // Calculations for Time Layouts
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Print numbers into layout DOM handles securely
+            document.getElementById("days").innerText = String(days).padStart(2, '0');
+            document.getElementById("hours").innerText = String(hours).padStart(2, '0');
+            document.getElementById("mins").innerText = String(minutes).padStart(2, '0');
+            document.getElementById("secs").innerText = String(seconds).padStart(2, '0');
+        }
+
+        // --- DATA: Sequential Reassurance Pool Packages ---
+        // --- DATA: Short, Simple & Funny Reassurance Packages ---
+        const dailyMessages = [
+            { 
+                heading: "🍦 Ice cream countdown!", 
+                text: "Only a few more days left to eat ice cream with your favorite human (me, of course). Keep studying! 😂❤️" 
+            },
+            { 
+                heading: "🛑 Stop Overthinking!", 
+                text: "Your brain is tiny, don't overload it! Take a 5-minute break right now. Go drink some water! 🧠💧" 
+            },
+            { 
+                heading: "📱 Spam Coupon Activated!", 
+                text: "Feeling bored? This coupon allows you to send me 50 angry texts in a row. I will accept them all! 😜🔒" 
+            },
+            { 
+                heading: "🎓 Brainiac Mode!", 
+                text: "You are the smartest girl in the entire university. Finish this exam so we can finally go out on a proper date! 👸✨" 
+            },
+            { 
+                heading: "🤫 Quick Reminder!", 
+                text: "No matter how hard the paper is, you are still getting 100% marks in being my cute short-tempered monster! 🥰🌸" 
+            }
+        ];
+
+        function claimEnergyPack() {
+            const packBox = document.getElementById("energy-pack");
+            
+            // Generate index safely tied to today's date so it rotates natively each calendar day
+            const todayIndex = new Date().getDate() % dailyMessages.length;
+            const data = dailyMessages[todayIndex];
+
+            document.getElementById("pack-heading").innerHTML = `💡 ${data.heading}`;
+            document.getElementById("pack-message").innerText = data.text;
+
+            packBox.style.display = "block";
+        }
+
+        // Launch interval looping threads instantly
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+    </script>
+</body>
+</html>
