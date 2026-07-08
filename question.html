@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Little Surprise! ✨</title>
+    <style>
+        /* --- Basic Styles & Vibe --- */
+        :root {
+            --bg-color: #ffeef2; /* Pastel Pink background */
+            --card-color: #ffffff;
+            --text-color: #333;
+            --accent-color: #ff6f91; /* Main cute color */
+            --yes-color: #79d7bb; /* Pastel Green */
+            --no-color: #ffb3b3; /* Pastel Red */
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden; /* Prevent scrolling during runaway */
+        }
+
+        /* --- Container & Cards --- */
+        #game-container {
+            width: 90%;
+            max-width: 500px;
+            perspective: 1000px; /* 3D effect for card transitions */
+        }
+
+        .card {
+            background: var(--card-color);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            opacity: 0;
+            display: none;
+            transform: rotateX(-10deg) translateY(20px);
+            transition: all 0.5s ease-out;
+            position: relative; /* Essential for relative positioning of NO button */
+        }
+
+        .card.active {
+            opacity: 1;
+            display: block;
+            transform: rotateX(0deg) translateY(0px);
+        }
+
+        /* --- Text & Elements --- */
+        h1.welcome-title {
+            color: var(--accent-color);
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+        }
+
+        p.welcome-subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        h2.question-text {
+            font-size: 1.6rem;
+            margin-bottom: 30px;
+        }
+
+        .emoji-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        /* --- Buttons --- */
+        .btn {
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            outline: none;
+            margin: 10px;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-start {
+            background-color: var(--accent-color);
+            color: white;
+            font-size: 1.3rem;
+            padding: 18px 40px;
+        }
+
+        .btn-yes {
+            background-color: var(--yes-color);
+            color: #fff;
+        }
+
+        .btn-no {
+            background-color: var(--no-color);
+            color: #fff;
+            position: relative; /* Default, will change to absolute for runaway */
+        }
+
+        /* --- Runaway Logic Class --- */
+        .btn-no.runaway {
+            position: absolute;
+            transition: all 0.1s ease !important; /* Fast movement */
+        }
+
+        /* --- Summary Screen Styles --- */
+        #summary-list {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        #summary-list li {
+            background: #fff0f5;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 15px;
+            border-left: 5px solid var(--accent-color);
+            display: flex;
+            align-items: center;
+        }
+
+        #summary-list li .check {
+            color: #4caf50;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .btn-restart {
+            background-color: #666;
+            color: white;
+            margin-top: 20px;
+        }
+
+        /* Animation for icons/confetti */
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        .pop-in {
+            animation: popIn 0.6s ease-out forwards;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- --- START SCREEN --- -->
+        <div class="card active" id="start-screen">
+            <span class="emoji-icon pop-in">🎁</span>
+            <h1 class="welcome-title">A Little Surprise for You!</h1>
+            <p class="welcome-subtitle">Are you ready to answer 5 quick questions honestly? 😉</p>
+            <button class="btn btn-start" onclick="startQuiz()">Yes, I'm Ready! 💖</button>
+        </div>
+
+        <!-- --- QUESTIONS CARDS (Dynamically Generated) --- -->
+        <div id="quiz-screens"></div>
+
+        <!-- --- SUMMARY SCREEN --- -->
+        <div class="card" id="summary-screen">
+            <span class="emoji-icon pop-in">🎉</span>
+            <h1 class="welcome-title">Yay! All Done!</h1>
+            <h2 class="question-text">Here is your customized summary list:</h2>
+            <ul id="summary-list"></ul>
+            <button class="btn btn-restart" onclick="restartQuiz()">Try Again? 🔄</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA: The Questions (Simple English) ---
+        const questions = [
+            { id: 1, text: "Will you stop getting angry at me over tiny things? 😂", emoji: "😤" },
+            { id: 2, text: "Do you agree that listening to my voice makes your day better? 📞", emoji: "🥺" },
+            { id: 3, text: "Are we doing a cute couples photoshoot very soon? 📸", emoji: "✨" },
+            { id: 4, text: "Do you promise to study hard for your upcoming exams? 📚", emoji: "🎓" },
+            { id: 5, text: "Will you promise not to block me after reading this summary? 😜", emoji: "📱" } // This one allows NO
+        ];
+
+        const summaryItems = [
+            { id: 1, text: "I will stop getting angry at you over tiny things." },
+            { id: 2, text: "I agree that listening to your voice makes my day better." },
+            { id: 3, text: "We are doing a cute couples photoshoot very soon." },
+            { id: 4, text: "I promise to study hard for my upcoming exams." },
+            { id: 5, text: "I promise not to block you after reading this summary." }
+        ];
+
+        // --- STATE MANAGEMENT ---
+        let currentQuestionIndex = 0;
+        let answers = {}; // Stores { questionId: 'yes' or 'no' }
+
+        // --- DOM ELEMENTS ---
+        const gameContainer = document.getElementById('game-container');
+        const startScreen = document.getElementById('start-screen');
+        const quizScreensContainer = document.getElementById('quiz-screens');
+        const summaryScreen = document.getElementById('summary-screen');
+        const summaryList = document.getElementById('summary-list');
+
+        // --- FUNCTIONS ---
+
+        // 1. Generate Question Cards
+        function generateQuiz() {
+            quizScreensContainer.innerHTML = '';
+            questions.forEach((q, index) => {
+                const isLastQuestion = index === questions.length - 1;
+                const card = document.createElement('div');
+                card.className = 'card quiz-card';
+                card.id = `q-card-${q.id}`;
+
+                card.innerHTML = `
+                    <span class="emoji-icon">${q.emoji}</span>
+                    <h2 class="question-text">${q.text}</h2>
+                    <div class="btn-group">
+                        <button class="btn btn-yes" onclick="handleYes(${q.id})">Yes!</button>
+                        <button class="btn btn-no ${!isLastQuestion ? 'runaway-ready' : ''}" id="no-btn-${q.id}" onclick="handleNo(${q.id})">No</button>
+                    </div>
+                `;
+                quizScreensContainer.appendChild(card);
+            });
+        }
+
+        // 2. Start Quiz
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            answers = {};
+            hideAllCards();
+            showCard(`q-card-${questions[currentQuestionIndex].id}`);
+            addRunawayEventListeners();
+        }
+
+        // 3. Handle 'Yes' Click
+        function handleYes(questionId) {
+            answers[questionId] = 'yes';
+            nextQuestion();
+        }
+
+        // 4. Handle 'No' Click (Only for the LAST question)
+        function handleNo(questionId) {
+            if (questionId === questions[questions.length - 1].id) {
+                answers[questionId] = 'no';
+                nextQuestion();
+            } else {
+                console.warn("Runaway No button was somehow clicked.");
+            }
+        }
+
+        // 5. Navigate to Next Question or Summary
+        function nextQuestion() {
+            currentQuestionIndex++;
+            hideAllCards();
+            if (currentQuestionIndex < questions.length) {
+                showCard(`q-card-${questions[currentQuestionIndex].id}`);
+            } else {
+                showSummary();
+            }
+        }
+
+        // 6. Runaway Logic: Set Up Event Listeners
+        function addRunawayEventListeners() {
+            const noButtons = document.querySelectorAll('.btn-no.runaway-ready');
+            noButtons.forEach(btn => {
+                btn.addEventListener('mouseover', moveButton);
+                btn.addEventListener('touchstart', moveButton); // For mobile touch
+            });
+        }
+
+        // 7. Runaway Logic: Movement
+        function moveButton(event) {
+            const btn = event.target;
+            const card = btn.closest('.card');
+            
+            // Activate runaway style (position: absolute) on first hover
+            if (!btn.classList.contains('runaway')) {
+                btn.classList.add('runaway');
+                const rect = btn.getBoundingClientRect();
+                const cardRect = card.getBoundingClientRect();
+                btn.style.left = `${rect.left - cardRect.left}px`;
+                btn.style.top = `${rect.top - cardRect.top}px`;
+            }
+
+            const cardWidth = card.offsetWidth;
+            const cardHeight = card.offsetHeight;
+            const btnWidth = btn.offsetWidth;
+            const btnHeight = btn.offsetHeight;
+
+            // Random position within card boundaries, with padding
+            const padding = 15;
+            let randomX = Math.random() * (cardWidth - btnWidth - padding * 2) + padding;
+            let randomY = Math.random() * (cardHeight - btnHeight - padding * 2) + padding;
+
+            // Simple check to ensure new pos isn't too close to current mouse pos
+            const dx = Math.abs(randomX - (event.clientX - card.getBoundingClientRect().left));
+            const dy = Math.abs(randomY - (event.clientY - card.getBoundingClientRect().top));
+            
+            if (dx < 50 || dy < 50) {
+                randomX = Math.random() * (cardWidth - btnWidth - padding * 2) + padding;
+                randomY = Math.random() * (cardHeight - btnHeight - padding * 2) + padding;
+            }
+
+            btn.style.left = `${randomX}px`;
+            btn.style.top = `${randomY}px`;
+        }
+
+        // 8. Show Summary Screen
+        function showSummary() {
+            hideAllCards();
+            showCard('summary-screen');
+            summaryList.innerHTML = '';
+            let yesCount = 0;
+
+            summaryItems.forEach(item => {
+                if (answers[item.id] === 'yes') {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span class="check">✔</span> ${item.text}`;
+                    summaryList.appendChild(li);
+                    yesCount++;
+                }
+            });
+
+            if(yesCount === 0) {
+                summaryList.innerHTML = "<li>Looks like no choices were checked! 😉</li>";
+            }
+        }
+
+        // 9. Restart
+        function restartQuiz() {
+            hideAllCards();
+            showCard('start-screen');
+            document.querySelectorAll('.btn-no').forEach(btn => btn.classList.remove('runaway'));
+            generateQuiz(); // Regenerate cards to reset absolute tracking styles
+        }
+
+        // Helper Functions
+        function hideAllCards() {
+            document.querySelectorAll('.card').forEach(card => card.classList.remove('active'));
+        }
+
+        function showCard(cardId) {
+            document.getElementById(cardId).classList.add('active');
+        }
+
+        // Initialize quiz cards on load
+        generateQuiz();
+
+    </script>
+</body>
+</html>
