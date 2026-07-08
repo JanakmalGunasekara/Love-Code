@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mystery Box Lockbreaker 🎁💥</title>
+    <style>
+        :root {
+            --bg-color: #ffeef2; /* Matching Pastel Pink */
+            --card-color: #ffffff;
+            --text-color: #333;
+            --accent-pink: #ff6f91; /* Main cute color */
+            --accent-hover: #e05273;
+            --purple-light: #fff5f7;
+            --font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        .main-container {
+            background: var(--card-color);
+            max-width: 450px;
+            width: 100%;
+            padding: 30px 20px;
+            border-radius: 25px;
+            box-shadow: 0 10px 25px rgba(255, 111, 145, 0.12);
+            text-align: center;
+            border: 4px solid #ffe3e8;
+        }
+
+        h1 {
+            font-size: clamp(1.3rem, 5vw, 1.6rem);
+            color: var(--accent-pink);
+            margin-bottom: 8px;
+            font-weight: 800;
+        }
+
+        p.subtitle {
+            font-size: clamp(0.85rem, 3.5vw, 0.95rem);
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        /* --- BOXES DISPLAY ARCHITECTURE --- */
+        .boxes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+        }
+
+        .gift-box {
+            background: var(--purple-light);
+            border: 3px dashed var(--accent-pink);
+            border-radius: 16px;
+            padding: 25px 10px;
+            cursor: pointer;
+            font-size: clamp(2.5rem, 10vw, 3rem);
+            transition: transform 0.1s, box-shadow 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 110px;
+        }
+
+        .gift-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(255, 111, 145, 0.15);
+        }
+
+        /* Shaking Animation for Locked Prank State */
+        .gift-box.shake {
+            animation: shakeBox 0.1s infinite alternate;
+            border-color: #ff4a5a;
+            background: #fff0f2;
+        }
+
+        @keyframes shakeBox {
+            0%, 100% { transform: translateX(0) rotate(0); }
+            25% { transform: translateX(-4px) rotate(-2deg); }
+            75% { transform: translateX(4px) rotate(2deg); }
+        }
+
+        /* Live tap counter inside the locked box */
+        .box-counter {
+            position: absolute;
+            bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 900;
+            color: #ff4a5a;
+            background: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            border: 1px solid #ff4a5a;
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        .gift-box.opened {
+            background: #e8fbf7;
+            border-style: solid;
+            border-color: #79d7bb;
+            pointer-events: none;
+            transform: scale(1.05) !important;
+            box-shadow: 0 5px 15px rgba(121, 215, 187, 0.2);
+        }
+
+        /* --- FINAL REWARD BANNER --- */
+        .reward-display {
+            margin-top: 25px;
+            background: #fff5f7;
+            border-radius: 16px;
+            padding: 20px;
+            border-left: 5px solid var(--accent-pink);
+            text-align: left;
+            display: none;
+            animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.2) forwards;
+        }
+
+        @keyframes popUp {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .reward-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--accent-pink);
+            margin-bottom: 5px;
+        }
+
+        .reward-body {
+            font-size: 0.95rem;
+            color: #444;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <h1>🎁 Mystery Box Lockbreaker</h1>
+        <p class="subtitle" id="game-subtitle">Choose ONLY ONE box to unlock your hidden weekend date package! 🤫</p>
+
+        <!-- THREE REWARDS BOXES MENU -->
+        <div class="boxes-grid" id="boxes-container">
+            <div class="gift-box" id="box-1" onclick="handleBoxClick(1)">🎁</div>
+            <div class="gift-box" id="box-2" onclick="handleBoxClick(2)">🎁</div>
+            <div class="gift-box" id="box-3" onclick="handleBoxClick(3)">🎁</div>
+        </div>
+
+        <!-- REWARD PANEL -->
+        <div class="reward-display" id="reward-hub">
+            <div class="reward-title" id="reward-heading">🎉 BOOM! Reward Unlocked!</div>
+            <p class="reward-body" id="reward-message">Loading system tokens info...</p>
+        </div>
+    </div>
+
+    <script>
+        const rewards = {
+            1: { icon: "🍕", title: "Premium Pizza Date!", desc: "You unlocked a 100% sponsored pizza date with zero complaints allowed! 😂" },
+            2: { icon: "🥰", title: "1-Hour VIP Attention!", desc: "Unlimited pampering, hand-holding, and forehead kisses are now activated. 🔒" },
+            3: { icon: "🍿", title: "Late Night Movie Pass!", desc: "A late-night movie session + long call. Sleep schedule destroyed tonight! 😜" }
+        };
+
+        let activeBoxId = null;
+        let clicksLeft = 15;
+        let isGameFinished = false;
+
+        function handleBoxClick(boxNum) {
+            if (isGameFinished) return;
+
+            // FIRST CLICK: Trigger the Lock Prank
+            if (activeBoxId === null) {
+                activeBoxId = boxNum;
+                
+                const targetBox = document.getElementById(`box-${boxNum}`);
+                targetBox.classList.add("shake");
+                targetBox.innerHTML = `🔒 <span class="box-counter" id="counter-tag">${clicksLeft}</span>`;
+
+                document.getElementById("game-subtitle").innerHTML = "🚨 <b>LOCK ENGAGED!</b> The box is jammed. <span style='color: #ff4a5a;'>Tap this locked box fast</span> to break it!";
+                
+                // Fade other boxes out instantly so she focuses only on this one
+                for (let i = 1; i <= 3; i++) {
+                    if (i !== boxNum) {
+                        document.getElementById(`box-${i}`).style.opacity = "0.2";
+                        document.getElementById(`box-${i}`).style.pointerEvents = "none";
+                    }
+                }
+                return;
+            }
+
+            // SUBSEQUENT CLICKS: Register taps on the SAME box only
+            if (activeBoxId === boxNum) {
+                clicksLeft--;
+                
+                const counterTag = document.getElementById("counter-tag");
+                if (counterTag) counterTag.innerText = clicksLeft;
+
+                // Visual tap feedback bounce on the box itself
+                const targetBox = document.getElementById(`box-${boxNum}`);
+                targetBox.style.transform = "scale(0.92)";
+                setTimeout(() => { 
+                    if (!isGameFinished) targetBox.style.transform = "none"; 
+                }, 50);
+
+                if (clicksLeft <= 0) {
+                    triggerSuccessUnlock();
+                }
+            }
+        }
+
+        function triggerSuccessUnlock() {
+            isGameFinished = true;
+            document.getElementById("game-subtitle").innerText = "Success! Security barrier shattered beautifully.";
+
+            const targetBox = document.getElementById(`box-${activeBoxId}`);
+            const data = rewards[activeBoxId];
+
+            // Clean styling states updates
+            targetBox.classList.remove("shake");
+            targetBox.classList.add("opened");
+            targetBox.innerHTML = data.icon; // Reveal the real hidden icon
+
+            // Reveal the reward card text layout
+            document.getElementById("reward-heading").innerHTML = `🎉 Unlocked: ${data.title}`;
+            document.getElementById("reward-message").innerText = data.desc;
+            document.getElementById("reward-hub").style.display = "block";
+        }
+    </script>
+</body>
+</html>
