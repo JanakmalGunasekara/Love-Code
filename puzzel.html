@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Corrupted Memory Puzzle 🧩</title>
+    <style>
+        :root {
+            --bg-pastel: #f4effa; /* Soft Lavender/Pink */
+            --card-white: #ffffff;
+            --accent-purple: #a278b5;
+            --accent-pink: #ff6f91;
+            --text-dark: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-pastel);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            overflow: hidden; /* Stops screen scrolling during runaway */
+        }
+
+        .main-container {
+            background: var(--card-white);
+            max-width: 420px;
+            width: 100%;
+            padding: 25px 20px;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(162, 120, 181, 0.15);
+            text-align: center;
+            border: 4px solid #f0e6f5;
+            position: relative;
+        }
+
+        h1 {
+            font-size: clamp(1.3rem, 5vw, 1.6rem);
+            color: var(--accent-purple);
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            font-size: clamp(0.85rem, 3.5vw, 0.95rem);
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        /* --- PUZZLE GRID ARCHITECTURE --- */
+        .puzzle-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            width: 280px;
+            height: 280px;
+            margin: 0 auto 25px auto;
+            position: relative;
+        }
+
+        .puzzle-piece {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            cursor: pointer;
+            overflow: hidden;
+            border: 3px solid #eee;
+            background-size: 280px 280px; /* Force sync matching single canvas dimensions */
+            background-repeat: no-repeat;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        /* Slice Coordinates using standard aesthetic placeholder image */
+        #piece-0 { background-image: url('https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=400&q=80'); background-position: 0 0; }
+        #piece-1 { background-image: url('https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=400&q=80'); background-position: -135px 0; }
+        #piece-2 { background-image: url('https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=400&q=80'); background-position: 0 -135px; }
+        #piece-3 { background-image: url('https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=400&q=80'); background-position: -135px -135px; }
+
+        /* Runaway state triggered via absolute overriding positions */
+        .puzzle-piece.runaway {
+            position: fixed;
+            width: 135px;
+            height: 135px;
+            z-index: 999;
+            border: 3px solid var(--accent-pink);
+            box-shadow: 0 8px 20px rgba(255, 111, 145, 0.3);
+            transition: left 0.15s ease, top 0.15s ease, transform 0.3s ease !important;
+        }
+
+        /* --- FINAL SUCCESS LAYOUT --- */
+        .success-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #ffffff;
+            border-radius: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.6s ease;
+            z-index: 100;
+        }
+
+        .success-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .heart-icon {
+            font-size: 4.5rem;
+            color: var(--accent-pink);
+            animation: beat 0.8s infinite alternate;
+            margin-bottom: 15px;
+        }
+
+        @keyframes beat {
+            to { transform: scale(1.15); }
+        }
+
+        .success-text {
+            font-size: 1.05rem;
+            line-height: 1.5;
+            color: #444;
+            background: #fff0f3;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px dashed var(--accent-pink);
+        }
+
+        .hint-text {
+            font-size: 0.85rem;
+            color: var(--accent-pink);
+            font-weight: 600;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container" id="main-panel">
+        <h1>🧩 Fix Our Memory</h1>
+        <p class="subtitle">This cute photo grid got corrupted! Click each block to rotate it back into the correct position.</p>
+
+        <div class="puzzle-grid" id="grid-board">
+            <div id="piece-0" class="puzzle-piece" onclick="rotatePiece(0)"></div>
+            <div id="piece-1" class="puzzle-piece" onclick="rotatePiece(1)"></div>
+            <div id="piece-2" class="puzzle-piece" onclick="rotatePiece(2)"></div>
+            <div id="piece-3" class="puzzle-piece"></div> <!-- Target piece -->
+        </div>
+
+        <p class="hint-text" id="status-hint">Tap pieces to fix rotations...</p>
+
+        <!-- HIDDEN SUCCESS FRAME -->
+        <div class="success-overlay" id="success-frame">
+            <span class="heart-icon">❤️</span>
+            <h2 style="color: var(--accent-pink); margin-bottom: 10px; font-weight: 800;">Memory Restored!</h2>
+            <div class="success-text">
+                No matter how much things get jumbled up or how hard you try to run away, we always end up fitting perfectly together in the end. Happy Puzzle Solving! 😘✨
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State tracking rotations (0=0deg, 1=90deg, 2=180deg, 3=270deg)
+        let rotations = [1, 2, 3, 1]; // Shuffled initially
+        let dodgeCount = 0;
+        const maxDodges = 5; // Triggers automatic completion after 5 attempts
+
+        const p3 = document.getElementById("piece-3");
+        const hint = document.getElementById("status-hint");
+
+        function initPuzzle() {
+            for (let i = 0; i < 4; i++) {
+                const piece = document.getElementById(`piece-${i}`);
+                piece.style.transform = `rotate(${rotations[i] * 90}deg)`;
+            }
+            setupRunawayInteractions();
+        }
+
+        function rotatePiece(id) {
+            // Normal pieces operations
+            rotations[id] = (rotations[id] + 1) % 4;
+            document.getElementById(`piece-${id}`).style.transform = `rotate(${rotations[id] * 90}deg)`;
+            checkNormalPiecesCondition();
+        }
+
+        function checkNormalPiecesCondition() {
+            // If pieces 0, 1, and 2 are perfectly aligned (rotation value === 0)
+            if (rotations[0] === 0 && rotations[1] === 0 && rotations[2] === 0) {
+                hint.innerText = "Wait! The last piece is glitching out! 🚨";
+                hint.style.color = "var(--accent-pink)";
+            } else {
+                hint.innerText = "Tap pieces to fix rotations...";
+                hint.style.color = "var(--accent-purple)";
+            }
+        }
+
+        function setupRunawayInteractions() {
+            // Desktop hover and mobile touch support for target block tracking
+            p3.addEventListener("mouseover", handleDodge);
+            p3.addEventListener("touchstart", function(e) {
+                e.preventDefault();
+                handleDodge();
+            });
+            p3.addEventListener("click", function() {
+                if (!p3.classList.contains("runaway")) {
+                    // Safety check if clicked inside default grid flow frame
+                    rotations[3] = (rotations[3] + 1) % 4;
+                    p3.style.transform = `rotate(${rotations[3] * 90}deg)`;
+                }
+            });
+        }
+
+        function handleDodge() {
+            // Trigger prank execution only if other 3 parts are already properly aligned
+            if (rotations[0] === 0 && rotations[1] === 0 && rotations[2] === 0) {
+                if (dodgeCount < maxDodges) {
+                    if (!p3.classList.contains("runaway")) {
+                        p3.classList.add("runaway");
+                    }
+
+                    // Calculate randomized positions inside safe inner viewport zones
+                    const padding = 40;
+                    const maxX = window.innerWidth - 150 - padding;
+                    const maxY = window.innerHeight - 150 - padding;
+
+                    const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+                    const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+
+                    p3.style.left = `${randomX}px`;
+                    p3.style.top = `${randomY}px`;
+
+                    dodgeCount++;
+                    hint.innerText = `Catch it! System Glitch (${dodgeCount}/${maxDodges}) 😜`;
+                } else {
+                    // Prank ends, reset piece back into context container frame seamlessly
+                    p3.classList.remove("runaway");
+                    p3.style.position = "relative";
+                    p3.style.left = "0";
+                    p3.style.top = "0";
+                    rotations[3] = 0;
+                    p3.style.transform = "rotate(0deg)";
+                    
+                    setTimeout(() => {
+                        document.getElementById("success-frame").classList.add("active");
+                    }, 400);
+                }
+            } else {
+                // If she tries to click piece 3 before fixing pieces 1, 2, 3
+                rotations[3] = (rotations[3] + 1) % 4;
+                p3.style.transform = `rotate(${rotations[3] * 90}deg)`;
+            }
+        }
+
+        initPuzzle();
+    </script>
+</body>
+</html>

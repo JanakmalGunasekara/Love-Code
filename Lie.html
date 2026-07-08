@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Face Lie Detector ✨🚨</title>
+    <style>
+        :root {
+            --bg-color: #ffeef2; /* Original Pastel Pink */
+            --card-color: #ffffff;
+            --text-color: #333;
+            --accent-pink: #ff6f91; /* Main cute color */
+            --error-red: #ff4a5a;
+            --success-green: #79d7bb;
+            --text-muted: #666;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            overflow: hidden;
+        }
+
+        .detector-panel {
+            background: var(--card-color);
+            max-width: 420px;
+            width: 100%;
+            padding: 30px 20px;
+            border-radius: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+            border: 4px solid #ffe3e8;
+            transition: transform 0.3s ease;
+            display: none; /* Hidden until start */
+        }
+
+        /* Start Screen Specific */
+        .start-panel {
+            background: var(--card-color);
+            max-width: 420px;
+            width: 100%;
+            padding: 40px 25px;
+            border-radius: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border: 4px solid #ffe3e8;
+        }
+
+        .detector-panel.busted {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        .system-status {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--accent-pink);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--text-color);
+            margin-bottom: 15px;
+        }
+
+        .question-box {
+            background: #fff5f7;
+            padding: 20px;
+            border-radius: 16px;
+            font-size: 1.05rem;
+            line-height: 1.4;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--accent-pink);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+
+        /* --- CAMERA SCREEN ARCHITECTURE --- */
+        .camera-container {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 25px auto;
+            border-radius: 50%;
+            border: 4px solid #eee;
+            overflow: hidden;
+            background: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        .camera-container.scanning {
+            border-color: var(--accent-pink);
+            box-shadow: 0 0 15px rgba(255, 111, 145, 0.4);
+        }
+
+        #webcam {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none; 
+            transform: scaleX(-1); /* Mirror view */
+        }
+
+        .cam-placeholder {
+            font-size: 3.5rem;
+            display: block;
+        }
+
+        /* Moving laser line scanning animation */
+        .laser-line {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: var(--accent-pink);
+            box-shadow: 0 0 10px var(--accent-pink);
+            display: none;
+            pointer-events: none;
+        }
+
+        .camera-container.scanning .laser-line {
+            display: block;
+            animation: scan 1.5s infinite linear;
+        }
+
+        @keyframes scan {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+
+        /* --- BUTTONS --- */
+        .hold-btn, .start-btn {
+            background: var(--accent-pink);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 111, 145, 0.2);
+            transition: transform 0.1s, background 0.2s;
+            width: 85%;
+            margin-bottom: 20px;
+            user-select: none;
+            -webkit-user-select: none;
+            outline: none;
+        }
+
+        .start-btn {
+            width: 100%;
+            margin-top: 10px;
+            margin-bottom: 0;
+        }
+
+        .hold-btn:active, .start-btn:active {
+            transform: scale(0.96);
+        }
+
+        .instruction-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            padding: 0 10px;
+        }
+
+        /* --- RESULT SCREEN MODAL --- */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .overlay.active { display: flex; }
+
+        .verdict-card {
+            background: #ffffff;
+            color: #333;
+            width: 100%;
+            max-width: 380px;
+            padding: 35px 25px;
+            border-radius: 25px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border: 4px dashed var(--accent-pink);
+        }
+
+        .busted-banner {
+            background: var(--error-red);
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        .close-btn {
+            width: 100%;
+            background: #333;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        /* --- FINAL SWEET SCREEN --- */
+        .final-panel { display: none; }
+        .final-panel h2 { color: var(--accent-pink); margin-bottom: 15px; font-size: 1.6rem; font-weight: 800; }
+        .final-text { background: #fff0f3; color: #444; padding: 20px; border-radius: 16px; border: 1px dashed #ff6f91; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+    <!-- SCREEN 0: START WELCOME PANEL -->
+    <div class="start-panel" id="welcome-screen">
+        <div style="font-size: 4rem; margin-bottom: 15px;">🎁</div>
+        <h1 style="color: var(--accent-pink); font-weight: 800;">AI Expression Polygraph</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px;">
+            Welcome to the advanced neural lie detector system. Please calibrate your front camera to start the verification process.
+        </p>
+        <button class="start-btn" onclick="startSystem()">Initialize System 🚀</button>
+    </div>
+
+    <!-- MAIN HIGH-TECH PANEL (Hidden initially) -->
+    <div class="detector-panel" id="main-panel">
+        <div class="system-status" id="status-indicator">● AI FACE SCANNER ONLINE</div>
+        <h1>AI POLYGRAPH TEST</h1>
+        
+        <div class="question-box" id="display-q">Loading queries...</div>
+
+        <div class="camera-container" id="cam-box">
+            <span class="cam-placeholder" id="emoji-placeholder">📸</span>
+            <video id="webcam" autoplay playsinline muted></video>
+            <div class="laser-line"></div>
+        </div>
+
+        <button class="hold-btn" id="hold-trigger">HOLD TO SCAN FACE 👤</button>
+
+        <p class="instruction-text" id="instruct-msg">
+            Answer out loud, then <b>PRESS & HOLD</b> the button to analyze micro-expressions.
+        </p>
+    </div>
+
+    <!-- MODAL OVERLAY -->
+    <div class="overlay" id="result-overlay">
+        <div class="verdict-card">
+            
+            <!-- PRANK ERROR STATE -->
+            <div id="prank-panel">
+                <div class="busted-banner">LIE DETECTED 🚨</div>
+                <div style="font-size: 4rem; margin-bottom: 10px;">❌</div>
+                <h3 style="margin-bottom: 10px; font-size: 1.3rem;">Biometric Anomaly</h3>
+                <p style="color: #555; font-size: 0.95rem; line-height: 1.4; margin-bottom: 20px;">
+                    Facial micro-expressions indicate clear signs of stress and deception. You are definitely lying! 😜
+                </p>
+                <button class="close-btn" onclick="nextQuestion()">Next Query →</button>
+            </div>
+
+            <!-- FINAL SUCCESS STATE -->
+            <div class="final-panel" id="final-panel">
+                <div style="font-size: 4.5rem; margin-bottom: 10px;">❤️</div>
+                <h2>Evaluation Complete</h2>
+                <div class="final-text">
+                    You failed every single expression scan! 😂 But the AI knows the real truth: You are a huge overthinker, an absolute cutie, and you love your boyfriend completely. System Closed! 😘🔒
+                </div>
+                <button class="close-btn" style="background: var(--accent-pink);" onclick="resetApp()">Finish Test</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            "Query #01: Do you secretly enjoy it when your boyfriend troubles you constantly?",
+            "Query #02: Do you feel lonely and miss him when he doesn't text you for a few hours?",
+            "Query #03: Honestly, do you agree that you are a highly stubborn, short-tempered little monster?",
+            "Query #04: Final Check: Are you planning to block him after this test finishes?"
+        ];
+
+        let currentQIndex = 0;
+        let scanTimer = null;
+        let isCamReady = false;
+
+        const trigger = document.getElementById("hold-trigger");
+        const video = document.getElementById("webcam");
+        const camBox = document.getElementById("cam-box");
+        const placeholder = document.getElementById("emoji-placeholder");
+        const panel = document.getElementById("main-panel");
+        const overlay = document.getElementById("result-overlay");
+        const instruct = document.getElementById("instruct-msg");
+
+        // --- BUTTON CLICKED: REQ PERMISSION ONCE AND START ---
+        async function startSystem() {
+            try {
+                // Instantly request permission inside the user click block
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                video.srcObject = stream;
+                isCamReady = true;
+                
+                // Transition screens
+                document.getElementById("welcome-screen").style.display = "none";
+                panel.style.display = "block";
+                
+                loadQuestion();
+            } catch (err) {
+                alert("Camera access is required for the lie detector test! Please allow it.");
+                console.warn("Camera access denied:", err);
+            }
+        }
+
+        function loadQuestion() {
+            if (currentQIndex < questions.length) {
+                document.getElementById("display-q").innerText = questions[currentQIndex];
+                document.getElementById("status-indicator").innerText = `● SCANNING QUERY 0${currentQIndex + 1}`;
+                document.getElementById("status-indicator").style.color = "var(--accent-pink)";
+            } else {
+                showFinalVerdict();
+            }
+        }
+
+        // --- ACTION START: HOLD ---
+        function startScanning(e) {
+            e.preventDefault();
+            if (!isCamReady) return;
+
+            instruct.innerText = "Scanning facial muscles... HOLD BUTTON STILL!";
+            
+            // Unhide the live feed running in background smoothly via CSS
+            placeholder.style.display = "none";
+            video.style.display = "block";
+            camBox.classList.add("scanning");
+
+            scanTimer = setTimeout(() => {
+                triggerBustedEffect();
+            }, 2000);
+        }
+
+        // --- ACTION END: RELEASE ---
+        function stopScanning() {
+            if (scanTimer) clearTimeout(scanTimer);
+            
+            // Hide feed instantly using CSS
+            video.style.display = "none";
+            placeholder.style.display = "block";
+            camBox.classList.remove("scanning");
+
+            if (!overlay.classList.contains("active") && currentQIndex < questions.length) {
+                instruct.innerHTML = "❌ <b>Scan failed!</b> You must press and hold until face parsing is completed.";
+            }
+        }
+
+        function triggerBustedEffect() {
+            panel.classList.add("busted");
+            stopScanning();
+
+            setTimeout(() => {
+                document.getElementById("prank-panel").style.display = "block";
+                document.getElementById("final-panel").style.display = "none";
+                overlay.classList.add("active");
+            }, 300);
+        }
+
+        function nextQuestion() {
+            overlay.classList.remove("active");
+            panel.classList.remove("busted");
+            currentQIndex++;
+            loadQuestion();
+            instruct.innerHTML = "Answer out loud, then <b>PRESS & HOLD</b> the button to analyze micro-expressions.";
+        }
+
+        function showFinalVerdict() {
+            document.getElementById("prank-panel").style.display = "none";
+            document.getElementById("final-panel").style.display = "block";
+            overlay.classList.add("active");
+        }
+
+        function resetApp() {
+            overlay.classList.remove("active");
+            panel.classList.remove("busted");
+            currentQIndex = 0;
+            document.getElementById("welcome-screen").style.display = "block";
+            panel.style.display = "none";
+        }
+
+        // --- EVENT BINDINGS ---
+        trigger.addEventListener("mousedown", startScanning);
+        window.addEventListener("mouseup", stopScanning);
+
+        trigger.addEventListener("touchstart", startScanning);
+        window.addEventListener("touchend", stopScanning);
+    </script>
+</body>
+</html>
