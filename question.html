@@ -16,17 +16,56 @@
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: var(--font-family);
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
             padding: 0;
+            min-height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+        }
+
+        /* --- NAVIGATION BAR --- */
+        nav {
+            background: var(--card-color);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            height: 100vh;
-            overflow: hidden; /* Prevent scrolling during runaway */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--accent-color);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 50px;
+            transition: all 0.2s ease;
         }
 
         /* --- Container & Cards --- */
@@ -34,6 +73,11 @@
             width: 90%;
             max-width: 500px;
             perspective: 1000px; /* 3D effect for card transitions */
+            /* New styles for centering with nav bar */
+            margin: auto; /* This will center it horizontally */
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
         }
 
         .card {
@@ -118,6 +162,18 @@
             position: relative; /* Default, will change to absolute for runaway */
         }
 
+        .btn-share {
+            background-color: #25D366; /* WhatsApp Green */
+            color: white;
+            margin-top: 10px;
+        }
+
+        .btn-share:hover {
+            background-color: #20c15a;
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.2);
+        }
+
+
         /* --- Runaway Logic Class --- */
         .btn-no.runaway {
             position: absolute;
@@ -154,6 +210,12 @@
             margin-top: 20px;
         }
 
+        /* Fix for summary screen overflow on smaller screens */
+        #summary-screen {
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
         /* Animation for icons/confetti */
         @keyframes popIn {
             0% { transform: scale(0); opacity: 0; }
@@ -165,9 +227,25 @@
             animation: popIn 0.6s ease-out forwards;
         }
 
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
     </style>
 </head>
 <body>
+
+    <!-- NAVIGATION BAR -->
+    <nav>
+        <a href="index.html" class="logo">✨ THE LOVE ARCADE</a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+        </ul>
+    </nav>
 
     <div id="game-container">
         <!-- --- START SCREEN --- -->
@@ -188,8 +266,13 @@
             <h2 class="question-text">Here is your customized summary list:</h2>
             <ul id="summary-list"></ul>
             <button class="btn btn-restart" onclick="restartQuiz()">Try Again? 🔄</button>
+            <button class="btn btn-share" onclick="shareSummary()">Share My Promises 💌</button>
         </div>
     </div>
+
+    <footer>
+        Handcrafted with Love & Code • 2026
+    </footer>
 
     <script>
         // --- DATA: The Questions (Simple English) ---
@@ -352,6 +435,23 @@
             showCard('start-screen');
             document.querySelectorAll('.btn-no').forEach(btn => btn.classList.remove('runaway'));
             generateQuiz(); // Regenerate cards to reset absolute tracking styles
+        }
+
+        // 10. Share Summary
+        function shareSummary() {
+            const currentUrl = window.location.href;
+            let shareText = "I just made some promises! 🥰\n\n";
+
+            summaryItems.forEach(item => {
+                if (answers[item.id] === 'yes') {
+                    shareText += `✔ ${item.text}\n`;
+                }
+            });
+
+            shareText += `\nCan you make your promises too? Play here: ${currentUrl}`;
+
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+            window.open(whatsappUrl, '_blank');
         }
 
         // Helper Functions

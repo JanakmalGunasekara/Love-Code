@@ -26,9 +26,51 @@
             color: var(--text-dark);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        /* --- NAVIGATION BAR --- */
+        nav {
+            background: var(--card-white);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--accent-pink);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 50px;
+            transition: all 0.2s ease;
+        }
+
+        .main-content-wrapper {
+            flex-grow: 1;
+            display: flex;
             justify-content: center;
             align-items: center;
-            padding: 15px;
+            padding: 20px 15px;
         }
 
         .main-container {
@@ -210,26 +252,67 @@
             outline: none;
         }
 
+        .popup-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .share-btn-popup {
+            background-color: #25D366; /* WhatsApp Green */
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+            transition: transform 0.1s;
+        }
+        .share-btn-popup:active {
+            transform: scale(0.96);
+        }
+
         .close-btn:hover {
             background: #000;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666;
         }
     </style>
 </head>
 <body>
 
-    <div class="main-container">
-        <h1>🎡 The Endless Compliment Wheel</h1>
-        <p class="subtitle">Feeling stressed with university work? Spin this magical wheel to claim your instant mood booster package!</p>
+    <!-- NAVIGATION BAR -->
+    <nav>
+        <a href="index.html" class="logo">✨ THE LOVE ARCADE</a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+        </ul>
+    </nav>
 
-        <div class="wheel-wrapper">
-            <div class="wheel-pointer"></div>
-            <div id="canvas-container" class="canvas-container">
-                <canvas id="wheel" class="canvas-wheel"></canvas>
+    <div class="main-content-wrapper">
+        <div class="main-container">
+            <h1>🎡 The Endless Compliment Wheel</h1>
+            <p class="subtitle">Feeling stressed with university work? Spin this magical wheel to claim your instant mood booster package!</p>
+
+            <div class="wheel-wrapper">
+                <div class="wheel-pointer"></div>
+                <div id="canvas-container" class="canvas-container">
+                    <canvas id="wheel" class="canvas-wheel"></canvas>
+                </div>
+                <div class="wheel-center"></div>
             </div>
-            <div class="wheel-center"></div>
-        </div>
 
-        <button class="spin-btn" id="spin-trigger" onclick="spinTheWheel()">Spin the Wheel! ✨</button>
+            <button class="spin-btn" id="spin-trigger" onclick="spinTheWheel()">Spin the Wheel! ✨</button>
+        </div>
     </div>
 
     <!-- COMPLIMENT POPUP MODAL -->
@@ -240,9 +323,16 @@
             <div class="popup-text" id="modal-msg">
                 Loading your compliment...
             </div>
-            <button class="close-btn" onclick="closeModal()">Spin Again 🔄</button>
+            <div class="popup-btn-group">
+                <button class="share-btn-popup" onclick="shareCompliment()">Share Compliment 💌</button>
+                <button class="close-btn" onclick="closeModal()">Spin Again 🔄</button>
+            </div>
         </div>
     </div>
+
+    <footer>
+        Handcrafted with Love & Code • 2026
+    </footer>
 
     <script>
         const segments = [
@@ -286,6 +376,7 @@
 
         let currentRotation = 0;
         let complimentIndex = 0;
+        let lastCompliment = {};
         const canvas = document.getElementById("wheel");
         const ctx = canvas.getContext("2d");
 
@@ -356,6 +447,7 @@
 
         function displayCompliment() {
             const data = complimentsPool[complimentIndex];
+            lastCompliment = data; // Store for sharing
             
             document.getElementById("modal-emoji").innerText = data.emoji;
             document.getElementById("modal-title").innerText = data.title;
@@ -367,6 +459,14 @@
 
         function closeModal() {
             document.getElementById("popup-overlay").classList.remove("active");
+        }
+
+        function shareCompliment() {
+            const currentUrl = window.location.href;
+            const message = `I just spun the Compliment Wheel and got this! 🥰\n\n*${lastCompliment.title}*\n"${lastCompliment.text}"\n\nSpin the wheel yourself: ${currentUrl}`;
+
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
         }
 
         // Window interaction setup to redraw crisp configurations if screen orientation shifts

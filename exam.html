@@ -27,9 +27,51 @@
             color: var(--text-color);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        /* --- NAVIGATION BAR --- */
+        nav {
+            background: var(--card-color);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--accent-pink);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 50px;
+            transition: all 0.2s ease;
+        }
+
+        .main-content-wrapper {
+            flex-grow: 1;
+            display: flex;
             justify-content: center;
             align-items: center;
-            padding: 15px;
+            padding: 20px 15px;
         }
 
         .main-container {
@@ -54,6 +96,34 @@
             font-size: clamp(0.85rem, 3.5vw, 0.95rem);
             color: #666;
             margin-bottom: 25px;
+        }
+
+        /* --- Custom Date Input --- */
+        .date-input-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+            background: var(--purple-light);
+            padding: 10px;
+            border-radius: 12px;
+        }
+        #exam-date-picker {
+            flex-grow: 1;
+            padding: 10px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+        #set-date-btn {
+            background: var(--accent-pink);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
         }
 
         /* --- COUNTDOWN BLOCK DISPLAY --- */
@@ -143,51 +213,109 @@
             color: #444;
             line-height: 1.5;
         }
+
+        .btn-share-pack {
+            background-color: #25D366; /* WhatsApp Green */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2);
+            transition: transform 0.1s;
+        }
+
+        .btn-share-pack:active {
+            transform: scale(0.96);
+        }
+
+        .btn-share-pack:hover {
+            background-color: #20c15a;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666;
+        }
     </style>
 </head>
 <body>
 
-    <div class="main-container">
-        <h1>🎓 Study Countdown Hub</h1>
-        <p class="subtitle">Real-time tracking until absolute freedom from exams!</p>
+    <!-- NAVIGATION BAR -->
+    <nav>
+        <a href="index.html" class="logo">✨ THE LOVE ARCADE</a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+        </ul>
+    </nav>
 
-        <!-- COUNTDOWN SYSTEM DISPLAY -->
-        <div class="countdown-container">
-            <div class="time-block">
-                <span class="time-number" id="days">00</span>
-                <span class="time-label">Days</span>
+    <div class="main-content-wrapper">
+        <div class="main-container">
+            <h1>🎓 Study Countdown Hub</h1>
+            <p class="subtitle">Real-time tracking until absolute freedom from exams!</p>
+            
+            <!-- NEW: DATE INPUT SECTION -->
+            <div class="date-input-container">
+                <input type="datetime-local" id="exam-date-picker">
+                <button id="set-date-btn" onclick="setCustomDate()">Set Date</button>
             </div>
-            <div class="time-block">
-                <span class="time-number" id="hours">00</span>
-                <span class="time-label">Hours</span>
-            </div>
-            <div class="time-block">
-                <span class="time-number" id="mins">00</span>
-                <span class="time-label">Mins</span>
-            </div>
-            <div class="time-block">
-                <span class="time-number" id="secs">00</span>
-                <span class="time-label">Secs</span>
-            </div>
-        </div>
 
-        <!-- ENERGIZER REASSURANCE ACTIONS -->
-        <button class="energy-btn" onclick="claimEnergyPack()">Claim Daily Energy Pack 🔌✨</button>
-        
-        <div class="pack-display" id="energy-pack">
-            <div class="pack-title" id="pack-heading">💡 Loading reminder...</div>
-            <p class="pack-body" id="pack-message">Your energy message will display instantly.</p>
+
+            <!-- COUNTDOWN SYSTEM DISPLAY -->
+            <div class="countdown-container">
+                <div class="time-block">
+                    <span class="time-number" id="days">00</span>
+                    <span class="time-label">Days</span>
+                </div>
+                <div class="time-block">
+                    <span class="time-number" id="hours">00</span>
+                    <span class="time-label">Hours</span>
+                </div>
+                <div class="time-block">
+                    <span class="time-number" id="mins">00</span>
+                    <span class="time-label">Mins</span>
+                </div>
+                <div class="time-block">
+                    <span class="time-number" id="secs">00</span>
+                    <span class="time-label">Secs</span>
+                </div>
+            </div>
+
+            <!-- ENERGIZER REASSURANCE ACTIONS -->
+            <button class="energy-btn" onclick="claimEnergyPack()">Claim Daily Energy Pack 🔌✨</button>
+            
+            <div class="pack-display" id="energy-pack">
+                <div class="pack-title" id="pack-heading">💡 Loading reminder...</div>
+                <p class="pack-body" id="pack-message">Your energy message will display instantly.</p>
+                <button class="btn-share-pack" onclick="shareEnergyPack()">Share Energy Pack 💌</button>
+            </div>
         </div>
     </div>
 
+    <footer>
+        Handcrafted with Love & Code • 2026
+    </footer>
+
     <script>
-        // --- CONFIGURATION: Set the precise target date for when exams finish ---
-        // Format: "Month Day, Year HH:MM:SS"
-        const targetExamEnd = new Date("Aug 28, 2026 12:00:00").getTime();
+        // --- DYNAMIC CONFIGURATION ---
+        // Use localStorage to remember the date, or use a default.
+        let targetExamEnd = localStorage.getItem('examTargetDate') || new Date("Aug 28, 2026 12:00:00").getTime();
 
         function updateCountdown() {
             const now = new Date().getTime();
             const distance = targetExamEnd - now;
+
+            // Update the input field to show the current target date
+            const dateObject = new Date(parseInt(targetExamEnd));
+            const formattedDate = dateObject.toISOString().slice(0, 16);
+            document.getElementById('exam-date-picker').value = formattedDate;
 
             if (distance < 0) {
                 document.getElementById("days").innerText = "00";
@@ -209,6 +337,18 @@
             document.getElementById("hours").innerText = String(hours).padStart(2, '0');
             document.getElementById("mins").innerText = String(minutes).padStart(2, '0');
             document.getElementById("secs").innerText = String(seconds).padStart(2, '0');
+        }
+
+        function setCustomDate() {
+            const datePicker = document.getElementById('exam-date-picker');
+            if (!datePicker.value) {
+                alert("Please select a valid date and time!");
+                return;
+            }
+            targetExamEnd = new Date(datePicker.value).getTime();
+            localStorage.setItem('examTargetDate', targetExamEnd); // Save to browser memory
+            alert("Countdown date has been updated!");
+            updateCountdown(); // Immediately update the display
         }
 
         // --- DATA: Sequential Reassurance Pool Packages ---
@@ -234,8 +374,10 @@
                 heading: "🤫 Quick Reminder!", 
                 text: "No matter how hard the paper is, you are still getting 100% marks in being my cute short-tempered monster! 🥰🌸" 
             }
+            
         ];
 
+        let lastMessage = {};
         function claimEnergyPack() {
             const packBox = document.getElementById("energy-pack");
             
@@ -243,11 +385,28 @@
             const todayIndex = new Date().getDate() % dailyMessages.length;
             const data = dailyMessages[todayIndex];
 
+            lastMessage = data; // Store for sharing
+
             document.getElementById("pack-heading").innerHTML = `💡 ${data.heading}`;
             document.getElementById("pack-message").innerText = data.text;
 
             packBox.style.display = "block";
+            
         }
+
+        function shareEnergyPack() {
+            const currentUrl = window.location.href;
+            const targetDate = new Date(parseInt(targetExamEnd));
+            const formattedDate = targetDate.toLocaleString('en-US', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+            let message = `I'm counting down until my exams are over on: *${formattedDate}*! 🎓\n\n`;
+            message += `I also got this cute energy pack: \n*${lastMessage.heading}*\n"${lastMessage.text}"\n\n`;
+            message += `Set your own countdown here: ${currentUrl}`;
+
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+         
 
         // Launch interval looping threads instantly
         setInterval(updateCountdown, 1000);

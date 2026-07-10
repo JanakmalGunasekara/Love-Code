@@ -51,6 +51,12 @@
             letter-spacing: -0.5px;
         }
 
+        .share-nav-btn {
+            color: var(--accent-pink);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
         .nav-links {
             display: flex;
             gap: 15px;
@@ -75,6 +81,12 @@
         .nav-links a.active {
             background: var(--accent-pink);
             color: white;
+        }
+        
+        .nav-links a.share-btn-nav {
+            background: #e0f2f1;
+            color: #00796b;
+            font-weight: 700;
         }
 
         /* --- MAIN CONTAINER --- */
@@ -188,6 +200,9 @@
     <!-- NAVIGATION BAR -->
     <nav>
         <a href="about.html" class="logo">✨ THE LOVE ARCADE</a>
+        <ul class="nav-links">
+            <li><a href="#" id="universal-share-btn" class="share-btn-nav">Share Arcade 📲</a></li>
+        </ul>
     </nav>
 
     <!-- ABOUT CONTENT CONTAINER -->
@@ -250,5 +265,31 @@
         Handcrafted with Love & Code • 2026
     </footer>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const shareButton = document.getElementById('universal-share-btn');
+
+            // Check if the Web Share API is supported by the browser
+            if (navigator.share) {
+                shareButton.addEventListener('click', async (event) => {
+                    event.preventDefault(); // Prevent default anchor behavior
+                    try {
+                        await navigator.share({
+                            title: 'The Love Arcade ✨',
+                            text: 'Come play these cute games I found! ❤️',
+                            url: window.location.href
+                        });
+                        console.log('Arcade shared successfully!');
+                    } catch (error) {
+                        console.error('Error sharing:', error);
+                    }
+                });
+            } else {
+                // Hide the button or notify the user if Web Share API is not available
+                shareButton.style.display = 'none';
+                console.warn('Web Share API is not supported in this browser.');
+            }
+        });
+    </script>
 </body>
 </html>

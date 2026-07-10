@@ -6,9 +6,8 @@
     <title>The Corrupted Memory Puzzle 🧩</title>
     <style>
         :root {
-            --bg-pastel: #f4effa; /* Soft Lavender/Pink */
+            --bg-pastel: #ffeef2; /* Pastel Pink */
             --card-white: #ffffff;
-            --accent-purple: #a278b5;
             --accent-pink: #ff6f91;
             --text-dark: #333333;
         }
@@ -25,10 +24,51 @@
             color: var(--text-dark);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        /* --- NAVIGATION BAR --- */
+        nav {
+            background: var(--card-white);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--accent-pink);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 50px;
+            transition: all 0.2s ease;
+        }
+
+        .main-content-wrapper {
+            flex-grow: 1;
+            display: flex;
             justify-content: center;
             align-items: center;
-            padding: 15px;
-            overflow: hidden; /* Stops screen scrolling during runaway */
+            padding: 20px 15px;
         }
 
         .main-container {
@@ -45,7 +85,7 @@
 
         h1 {
             font-size: clamp(1.3rem, 5vw, 1.6rem);
-            color: var(--accent-purple);
+            color: var(--accent-pink);
             margin-bottom: 8px;
         }
 
@@ -54,6 +94,29 @@
             color: #666;
             margin-bottom: 25px;
             line-height: 1.4;
+        }
+
+        /* --- NEW: Image Selector --- */
+        .image-selector {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .thumb {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            border: 3px solid #ddd;
+            cursor: pointer;
+            object-fit: cover;
+            transition: all 0.2s ease;
+        }
+        .thumb:hover, .thumb.selected {
+            border-color: var(--accent-pink);
+            transform: scale(1.1);
+            box-shadow: 0 4px 10px rgba(255, 111, 145, 0.2);
         }
 
         /* --- PUZZLE GRID ARCHITECTURE --- */
@@ -75,26 +138,20 @@
             overflow: hidden;
             border: 3px solid #eee;
             background-size: 280px 280px; /* Force sync matching single canvas dimensions */
-            background-repeat: no-repeat;
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 4px 8px rgba(0,0,0,0.05);
         }
 
-        /* Slice Coordinates using standard aesthetic placeholder image */
-        #piece-0 { background-image: url('https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=400&q=80'); background-position: 0 0; }
-        #piece-1 { background-image: url('https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=400&q=80'); background-position: -135px 0; }
-        #piece-2 { background-image: url('https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=400&q=80'); background-position: 0 -135px; }
-        #piece-3 { background-image: url('https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=400&q=80'); background-position: -135px -135px; }
+        /* JS will handle background-image and background-position */
 
         /* Runaway state triggered via absolute overriding positions */
         .puzzle-piece.runaway {
-            position: fixed;
-            width: 135px;
-            height: 135px;
+            position: absolute;
             z-index: 999;
             border: 3px solid var(--accent-pink);
             box-shadow: 0 8px 20px rgba(255, 111, 145, 0.3);
-            transition: left 0.15s ease, top 0.15s ease, transform 0.3s ease !important;
+            /* Use a faster transition for the runaway effect */
+            transition: left 0.1s ease-out, top 0.1s ease-out, transform 0.3s ease !important;
         }
 
         /* --- FINAL SUCCESS LAYOUT --- */
@@ -140,131 +197,275 @@
             border: 1px dashed var(--accent-pink);
         }
 
+        .success-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .btn-share, .btn-restart {
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .btn-share {
+            background-color: #25D366; /* WhatsApp Green */
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+        }
+
         .hint-text {
             font-size: 0.85rem;
             color: var(--accent-pink);
             font-weight: 600;
             min-height: 20px;
         }
+
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666;
+        }
     </style>
 </head>
 <body>
 
-    <div class="main-container" id="main-panel">
-        <h1>🧩 Fix Our Memory</h1>
-        <p class="subtitle">This cute photo grid got corrupted! Click each block to rotate it back into the correct position.</p>
+    <!-- NAVIGATION BAR -->
+    <nav>
+        <a href="index.html" class="logo">✨ THE LOVE ARCADE</a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+        </ul>
+    </nav>
 
-        <div class="puzzle-grid" id="grid-board">
-            <div id="piece-0" class="puzzle-piece" onclick="rotatePiece(0)"></div>
-            <div id="piece-1" class="puzzle-piece" onclick="rotatePiece(1)"></div>
-            <div id="piece-2" class="puzzle-piece" onclick="rotatePiece(2)"></div>
-            <div id="piece-3" class="puzzle-piece"></div> <!-- Target piece -->
-        </div>
+    <div class="main-content-wrapper">
+        <div class="main-container" id="main-panel">
+            <h1>🧩 Fix Our Memory</h1>
+            <p class="subtitle">First, pick a memory, then rotate the blocks to fix the corrupted photo!</p>
 
-        <p class="hint-text" id="status-hint">Tap pieces to fix rotations...</p>
+            <!-- NEW: Image Selector -->
+            <div class="image-selector" id="image-selector">
+                <!-- Thumbs generated by JS -->
+            </div>
 
-        <!-- HIDDEN SUCCESS FRAME -->
-        <div class="success-overlay" id="success-frame">
-            <span class="heart-icon">❤️</span>
-            <h2 style="color: var(--accent-pink); margin-bottom: 10px; font-weight: 800;">Memory Restored!</h2>
-            <div class="success-text">
-                No matter how much things get jumbled up or how hard you try to run away, we always end up fitting perfectly together in the end. Happy Puzzle Solving! 😘✨
+            <div class="puzzle-grid" id="grid-board"></div>
+
+            <p class="hint-text" id="status-hint">Tap pieces to fix rotations...</p>
+
+            <!-- HIDDEN SUCCESS FRAME -->
+            <div class="success-overlay" id="success-frame">
+                <span class="heart-icon">❤️</span>
+                <h2 style="color: var(--accent-pink); margin-bottom: 10px; font-weight: 800;">Memory Restored!</h2>
+                <div class="success-text">
+                    No matter how much things get jumbled up or how hard you try to run away, we always end up fitting perfectly together in the end. Happy Puzzle Solving! 😘✨
+                </div>
+                <div class="success-btn-group">
+                    <button class="btn-share" onclick="shareVictory()">Share Victory 💌</button>
+                    <button class="btn-restart" style="background: #666; color: white;" onclick="restartPuzzle()">Play Again 🔄</button>
+                </div>
             </div>
         </div>
     </div>
 
+    <footer>
+        Handcrafted with Love & Code • 2026
+    </footer>
+
     <script>
-        // State tracking rotations (0=0deg, 1=90deg, 2=180deg, 3=270deg)
-        let rotations = [1, 2, 3, 1]; // Shuffled initially
-        let dodgeCount = 0;
+        // --- CONFIGURATION ---
+        const GRID_SIZE = 3; // 3x3 grid
+        const NUM_PIECES = GRID_SIZE * GRID_SIZE;
+        const RUNAWAY_PIECE_INDEX = Math.floor(NUM_PIECES / 2); // The middle piece
         const maxDodges = 5; // Triggers automatic completion after 5 attempts
 
-        const p3 = document.getElementById("piece-3");
+        const images = [
+            'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=400&q=80',
+            'https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&w=400&q=80',
+            'https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=400&q=80'
+        ];
+        let selectedImageUrl = images[0];
+
+        // --- STATE ---
+        let rotations = [];
+        let dodgeCount = 0;
+
+        // --- DOM ELEMENTS ---
+        const gridBoard = document.getElementById("grid-board");
+        const successFrame = document.getElementById("success-frame");
         const hint = document.getElementById("status-hint");
+        const imageSelector = document.getElementById("image-selector");
+
+        function createImageSelector() {
+            imageSelector.innerHTML = '';
+            images.forEach((url, index) => {
+                const thumb = document.createElement('img');
+                thumb.src = url;
+                thumb.className = 'thumb';
+                if (url === selectedImageUrl) {
+                    thumb.classList.add('selected');
+                }
+                thumb.onclick = () => {
+                    selectedImageUrl = url;
+                    // Visually update selection
+                    document.querySelectorAll('.thumb').forEach(t => t.classList.remove('selected'));
+                    thumb.classList.add('selected');
+                    // Restart the puzzle with the new image
+                    restartPuzzle();
+                };
+                imageSelector.appendChild(thumb);
+            });
+        }
+
+        function createGrid() {
+            gridBoard.innerHTML = '';
+            gridBoard.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
+            const pieceSize = 280 / GRID_SIZE;
+
+            for (let i = 0; i < NUM_PIECES; i++) {
+                const piece = document.createElement('div');
+                piece.id = `piece-${i}`;
+                piece.className = 'puzzle-piece';
+                piece.style.backgroundImage = `url('${selectedImageUrl}')`;
+
+                const col = i % GRID_SIZE;
+                const row = Math.floor(i / GRID_SIZE);
+                piece.style.backgroundPosition = `-${col * pieceSize}px -${row * pieceSize}px`;
+                piece.style.backgroundSize = `${GRID_SIZE * pieceSize}px ${GRID_SIZE * pieceSize}px`;
+
+                if (i === RUNAWAY_PIECE_INDEX) {
+                    setupRunawayInteractions(piece);
+                } else {
+                    piece.onclick = () => rotatePiece(i);
+                }
+                gridBoard.appendChild(piece);
+            }
+        }
 
         function initPuzzle() {
-            for (let i = 0; i < 4; i++) {
+            createGrid();
+            rotations = Array.from({ length: NUM_PIECES }, () => Math.floor(Math.random() * 4));
+            rotations[RUNAWAY_PIECE_INDEX] = Math.floor(Math.random() * 4); // Also randomize runaway piece
+            dodgeCount = 0;
+            successFrame.classList.remove("active");
+
+            for (let i = 0; i < NUM_PIECES; i++) {
                 const piece = document.getElementById(`piece-${i}`);
-                piece.style.transform = `rotate(${rotations[i] * 90}deg)`;
+                if (piece) {
+                    piece.style.transform = `rotate(${rotations[i] * 90}deg)`;
+                }
             }
-            setupRunawayInteractions();
+            checkNormalPiecesCondition();
         }
 
         function rotatePiece(id) {
-            // Normal pieces operations
             rotations[id] = (rotations[id] + 1) % 4;
             document.getElementById(`piece-${id}`).style.transform = `rotate(${rotations[id] * 90}deg)`;
             checkNormalPiecesCondition();
         }
 
         function checkNormalPiecesCondition() {
-            // If pieces 0, 1, and 2 are perfectly aligned (rotation value === 0)
-            if (rotations[0] === 0 && rotations[1] === 0 && rotations[2] === 0) {
+            const allOthersSolved = rotations.every((rot, i) => i === RUNAWAY_PIECE_INDEX || rot === 0);
+
+            if (allOthersSolved) {
                 hint.innerText = "Wait! The last piece is glitching out! 🚨";
                 hint.style.color = "var(--accent-pink)";
             } else {
                 hint.innerText = "Tap pieces to fix rotations...";
-                hint.style.color = "var(--accent-purple)";
+                hint.style.color = "#888"; /* A more neutral hint color */
             }
+            return allOthersSolved;
         }
 
-        function setupRunawayInteractions() {
-            // Desktop hover and mobile touch support for target block tracking
-            p3.addEventListener("mouseover", handleDodge);
-            p3.addEventListener("touchstart", function(e) {
+        function setupRunawayInteractions(piece) {
+            piece.addEventListener("mouseover", handleDodge);
+            piece.addEventListener("touchstart", function(e) {
                 e.preventDefault();
                 handleDodge();
             });
-            p3.addEventListener("click", function() {
-                if (!p3.classList.contains("runaway")) {
-                    // Safety check if clicked inside default grid flow frame
-                    rotations[3] = (rotations[3] + 1) % 4;
-                    p3.style.transform = `rotate(${rotations[3] * 90}deg)`;
+            piece.addEventListener("click", function() {
+                if (!piece.classList.contains("runaway")) {
+                    rotatePiece(RUNAWAY_PIECE_INDEX);
                 }
             });
         }
 
         function handleDodge() {
-            // Trigger prank execution only if other 3 parts are already properly aligned
-            if (rotations[0] === 0 && rotations[1] === 0 && rotations[2] === 0) {
+            const piece = document.getElementById(`piece-${RUNAWAY_PIECE_INDEX}`);
+            if (checkNormalPiecesCondition()) {
                 if (dodgeCount < maxDodges) {
-                    if (!p3.classList.contains("runaway")) {
-                        p3.classList.add("runaway");
+                    // Activate runaway style (position: absolute) on first hover
+                    if (!piece.classList.contains("runaway")) {
+                        piece.classList.add("runaway");
+                        const rect = piece.getBoundingClientRect();
+                        const containerRect = gridBoard.getBoundingClientRect();
+                        piece.style.left = `${rect.left - containerRect.left}px`;
+                        piece.style.top = `${rect.top - containerRect.top}px`;
                     }
 
-                    // Calculate randomized positions inside safe inner viewport zones
+                    const containerWidth = gridBoard.offsetWidth;
+                    const containerHeight = gridBoard.offsetHeight;
+                    const pieceSize = piece.offsetWidth; // width and height are the same
                     const padding = 40;
-                    const maxX = window.innerWidth - 150 - padding;
-                    const maxY = window.innerHeight - 150 - padding;
+                    const maxX = containerWidth - pieceSize - padding;
+                    const maxY = containerHeight - pieceSize - padding;
 
-                    const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
-                    const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+                    const randomX = Math.floor(Math.random() * maxX);
+                    const randomY = Math.floor(Math.random() * maxY);
 
-                    p3.style.left = `${randomX}px`;
-                    p3.style.top = `${randomY}px`;
+                    piece.style.left = `${randomX}px`;
+                    piece.style.top = `${randomY}px`;
 
                     dodgeCount++;
                     hint.innerText = `Catch it! System Glitch (${dodgeCount}/${maxDodges}) 😜`;
                 } else {
-                    // Prank ends, reset piece back into context container frame seamlessly
-                    p3.classList.remove("runaway");
-                    p3.style.position = "relative";
-                    p3.style.left = "0";
-                    p3.style.top = "0";
-                    rotations[3] = 0;
-                    p3.style.transform = "rotate(0deg)";
+                    // --- FIX: Animate the piece back to its final grid position ---
+                    // 1. Calculate the final position within the grid
+                    const pieceSize = piece.offsetWidth;
+                    const finalCol = RUNAWAY_PIECE_INDEX % GRID_SIZE;
+                    const finalRow = Math.floor(RUNAWAY_PIECE_INDEX / GRID_SIZE);
+                    const gap = gridBoard.computedStyleMap().get('gap').value; // Get grid-gap value
+                    const finalX = finalCol * (pieceSize + gap);
+                    const finalY = finalRow * (pieceSize + gap);
+                    
+                    // 2. Animate to the final position and rotation
+                    piece.style.left = `${finalX}px`;
+                    piece.style.top = `${finalY}px`;
+                    rotations[RUNAWAY_PIECE_INDEX] = 0;
+                    piece.style.transform = "rotate(0deg)";
                     
                     setTimeout(() => {
-                        document.getElementById("success-frame").classList.add("active");
-                    }, 400);
+                        // 3. After animation, remove class to lock it in place
+                        piece.classList.remove("runaway");
+                        successFrame.classList.add("active");
+                    }, 500); // Wait for the animation to finish
                 }
             } else {
-                // If she tries to click piece 3 before fixing pieces 1, 2, 3
-                rotations[3] = (rotations[3] + 1) % 4;
-                p3.style.transform = `rotate(${rotations[3] * 90}deg)`;
+                rotatePiece(RUNAWAY_PIECE_INDEX);
             }
         }
 
+        function restartPuzzle() {
+            initPuzzle();
+        }
+
+        function shareVictory() {
+            const currentUrl = window.location.href;
+            const message = `I fixed our corrupted memory! 🎉\n\n"No matter how much things get jumbled up, we always end up fitting perfectly together in the end." 😘✨\n\nCan you solve it too? Play here: ${currentUrl}`;
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Initial Load
+        createImageSelector();
         initPuzzle();
     </script>
 </body>

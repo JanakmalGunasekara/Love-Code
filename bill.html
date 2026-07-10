@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Relationship Care Store</title>
+    <title>The Love Store</title>
     <style>
         :root {
             --primary: #111;
-            --accent: #ff6f91; 
+            --accent: #ff6f91;
+            --bg-color: #ffeef2;
             --accent-hover: #e05273;
             --bg: #fafafa;
             --card-white: #ffffff;
@@ -24,12 +25,14 @@
         }
 
         body {
-            background-color: var(--bg);
+            background-color: var(--bg-color);
             color: var(--text);
             min-height: 100vh;
-            padding-bottom: 60px;
+            display: flex;
+            flex-direction: column;
         }
 
+        /* --- NAVIGATION BAR --- */
         nav {
             background: var(--card-white);
             padding: 15px 5%;
@@ -37,24 +40,39 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            width: 100%;
         }
 
         .logo {
             font-size: 1.4rem;
             font-weight: 800;
             color: var(--accent);
+            text-decoration: none;
             letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 50px;
+            transition: all 0.2s ease;
         }
 
         .cart-icon-container {
             position: relative;
             cursor: pointer;
-            font-size: 1.5rem;
             background: none;
             border: none;
+            font-size: 1.5rem;
         }
 
         .cart-badge {
@@ -75,7 +93,7 @@
 
         .container {
             max-width: 1200px;
-            margin: 30px auto;
+            margin: 30px auto auto auto;
             padding: 0 20px;
         }
 
@@ -331,16 +349,27 @@
             cursor: pointer;
             width: 100%;
         }
+
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
     </style>
 </head>
 <body>
 
+    <!-- NAVIGATION BAR -->
     <nav>
-        <div class="logo" onclick="showStoreView()" style="cursor: pointer;">✨ THE LOVE STORE</div>
-        <button class="cart-icon-container" onclick="showCheckoutView()">
-            🛒<span class="cart-badge" id="global-cart-count">0</span>
-        </button>
+        <a href="index.html" class="logo">✨ THE LOVE ARCADE</a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><button class="cart-icon-container" onclick="showCheckoutView()">🛒<span class="cart-badge" id="global-cart-count">0</span></button></li>
+        </ul>
     </nav>
+
 
     <div class="container">
         
@@ -408,9 +437,16 @@
             <p style="font-weight: bold; margin-bottom: 20px; color: var(--success);">
                 Status: Ready to execute on demand! 🥰
             </p>
-            <button class="close-btn" onclick="closeVoucher()">Exit & Send Screenshot</button>
+            <button class="close-btn" style="background-color: #25D366; margin-bottom: 10px;" onclick="shareVouchers()">
+                Send Vouchers via WhatsApp 📲
+            </button>
+            <button class="close-btn" onclick="closeVoucher()">Finish & Close</button>
         </div>
     </div>
+
+    <footer>
+        Handcrafted with Love & Code • 2026
+    </footer>
 
     <script>
         // --- DATA: Highly Emotional & Premium Unsplash Images ---
@@ -586,6 +622,20 @@
             });
 
             document.getElementById('voucher-overlay').classList.add('active');
+        }
+
+        function shareVouchers() {
+            const currentUrl = window.location.href;
+            let shareText = "💖 Official Claim Vouchers Activated! 💖\n\nMy boyfriend is now legally obligated to fulfill the following claims:\n\n";
+
+            cart.forEach(id => {
+                const p = products.find(prod => prod.id === id);
+                shareText += `• ${p.name}\n`;
+            });
+
+            shareText += `\nStatus: Ready to execute on demand! 🥰\n\nYou can claim your own vouchers here: ${currentUrl}`;
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+            window.open(whatsappUrl, '_blank');
         }
 
         function closeVoucher() {

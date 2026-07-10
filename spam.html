@@ -28,11 +28,51 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 15px;
+            padding: 0;
             overflow-x: hidden; /* Prevent horizontal scrolling entirely */
             position: relative;
+        }
+
+        /* --- NAVIGATION BAR --- */
+        nav {
+            background: var(--card-color);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            width: 100%;
+            z-index: 20; /* Ensure it's above spam cards */
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--accent-pink);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 50px;
+            transition: all 0.2s ease;
+        }
+
+        .main-content-wrapper {
+            display: flex;
+            justify-content: center;
+            width: 100%;
         }
 
         /* --- CONTROL PANEL --- */
@@ -45,7 +85,7 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
             text-align: center;
             border: 4px solid #ffe3e8;
-            z-index: 10; 
+            z-index: 10;
             margin-top: 20px;
         }
 
@@ -67,24 +107,25 @@
             display: flex;
             gap: 10px;
             justify-content: center;
+            align-items: center;
         }
 
         .btn {
             border: none;
-            padding: 12px 20px;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             font-weight: bold;
-            border-radius: 50px;
+            border-radius: 40px;
             cursor: pointer;
             transition: transform 0.1s, background 0.2s;
             outline: none;
         }
 
         .btn-spam {
+            padding: 10px 20px;
             background: var(--accent-pink);
             color: white;
             box-shadow: 0 5px 15px rgba(255, 111, 145, 0.2);
-            flex: 2;
+            flex-grow: 1;
         }
 
         .btn-spam.active {
@@ -93,9 +134,19 @@
         }
 
         .btn-clear {
+            padding: 10px 20px;
             background: #666;
             color: white;
-            flex: 1;
+        }
+
+        .btn-share-chaos {
+            background-color: #25D366;
+            color: white;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            font-size: 1.4rem;
+            flex-shrink: 0;
         }
 
         /* --- FLOATING SPAM CARDS --- */
@@ -127,22 +178,48 @@
             0% { transform: scale(0.6); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
+
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666;
+        }
     </style>
 </head>
 <body>
 
-    <!-- CONTROL HUB -->
-    <div class="control-panel">
-        <h1>💖 Chaos Compliment Spammer</h1>
-        <p class="subtitle">Warning: The longer it runs, the faster it updates! Click to trigger the chaos loop.</p>
-        <div class="btn-group">
-            <button class="btn btn-spam" id="spam-btn" onclick="toggleAutoSpam()">Start Auto Spam! 🚀</button>
-            <button class="btn btn-clear" onclick="clearScreen()">Clear 🧹</button>
+    <!-- NAVIGATION BAR -->
+    <nav>
+        <a href="index.html" class="logo">✨ THE LOVE ARCADE</a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+        </ul>
+    </nav>
+
+    <div class="main-content-wrapper">
+        <!-- CONTROL HUB -->
+        <div class="control-panel">
+            <h1>💖 Chaos Compliment Spammer</h1>
+            <p class="subtitle">Warning: The longer it runs, the faster it updates! Click to trigger the chaos loop.</p>
+            <div class="btn-group">
+                <button class="btn btn-spam" id="spam-btn" onclick="toggleAutoSpam()">Start Auto Spam! 🚀</button>
+                <button class="btn btn-clear" onclick="clearScreen()">Clear 🧹</button>
+                <button class="btn btn-share-chaos" onclick="shareTheChaos()">📲</button>
+            </div>
         </div>
     </div>
 
     <!-- CARDS CONTAINER -->
     <div id="spam-area"></div>
+
+    <footer>
+        Handcrafted with Love & Code • 2026
+    </footer>
+
+    <!-- Audio element for the pop sound -->
+    <audio id="pop-sound" src="data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAARAAAATIJDAnw/Flw+2A==" preload="auto"></audio>
 
     <script>
         const compliments = [
@@ -167,6 +244,7 @@
         let timeoutRef = null;
         let isSpamming = false;
         
+        const popSound = document.getElementById('pop-sound');
         let initialDelay = 600; 
         let currentDelay = initialDelay;
         const minDelay = 60;    
@@ -176,6 +254,15 @@
             const btn = document.getElementById("spam-btn");
 
             if (!isSpamming) {
+                // --- FIX: Unlock audio context on first user interaction ---
+                // This is required by modern browsers to allow audio playback later.
+                if (popSound.paused) {
+                    popSound.play().catch(() => {}); // Play and immediately ignore any errors
+                    popSound.pause();
+                    popSound.currentTime = 0;
+                }
+                // --- End of fix ---
+
                 isSpamming = true;
                 currentDelay = initialDelay; 
                 btn.innerText = "Stop Spamming! 🛑";
@@ -213,6 +300,14 @@
             // --- FIXED: INJECT INTO DOM FIRST TO MEASURE TRUE RESPONSIVE ELEMENT DIMENSIONS ---
             spamArea.appendChild(card);
 
+            // Play the pop sound
+            if (popSound) {
+                popSound.currentTime = 0; // Rewind to start
+                popSound.play().catch(error => {
+                    console.warn("Audio play was prevented by the browser.", error);
+                });
+            }
+
             // Fetch pixel widths dynamically after browser applied flex or text wrap properties
             const cardActualWidth = card.offsetWidth;
             const cardActualHeight = card.offsetHeight;
@@ -223,9 +318,8 @@
             const maxY = window.innerHeight - cardActualHeight - padding;
 
             // Enforce clean coordinates bounds checks
-            const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
-            // Keeps items nicely below the top console layout
-            const randomY = Math.max(160, Math.floor(Math.random() * (maxY - 160)) + 160); 
+            const randomX = Math.max(padding, Math.floor(Math.random() * maxX)); 
+            const randomY = Math.max(80, Math.floor(Math.random() * (maxY - 80)) + 80); // Adjusted to be just below nav
 
             // Apply custom absolute properties natively
             card.style.left = `${randomX}px`;
@@ -240,6 +334,13 @@
                 toggleAutoSpam();
             }
             document.getElementById("spam-area").innerHTML = "";
+        }
+
+        function shareTheChaos() {
+            const currentUrl = window.location.href;
+            const message = `Help! I'm drowning in compliments on this cute website! 😂 You have to see this!\n\n${currentUrl}`;
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
         }
     </script>
 </body>
